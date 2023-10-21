@@ -31,6 +31,15 @@ pub fn generate_witness_from_wasm<F: PrimeField>(
     witness_input_json: String,
     witness_output: impl AsRef<Path>,
 ) -> Vec<F> {
+    generate_witness_from_wasm_with_name(witness_dir, witness_input_json, witness_output, "main".into())
+}
+
+pub fn generate_witness_from_wasm_with_name<F: PrimeField>(
+    witness_dir: PathBuf,
+    witness_input_json: String,
+    witness_output: impl AsRef<Path>,
+    witness_wasm_name: String,
+) -> Vec<F> {
     let root = current_dir().unwrap();
     let witness_generator_input = root.join("circom_input.json");
     fs::write(&witness_generator_input, witness_input_json).unwrap();
@@ -38,7 +47,7 @@ pub fn generate_witness_from_wasm<F: PrimeField>(
     let mut witness_js = witness_dir.clone();
     witness_js.push("generate_witness.js");
     let mut witness_wasm = witness_dir.clone();
-    witness_wasm.push("main.wasm");
+    witness_wasm.push(format!("{witness_wasm_name}.wasm"));
 
     let output = Command::new("node")
         .arg(&witness_js)
