@@ -80,18 +80,20 @@ pub fn synthesize<F: PrimeField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     r1cs: R1CS<F>,
     witness: Option<Vec<F>>,
-) -> Result<AllocatedNum<F>, SynthesisError> {
-    //println!("witness: {:?}", witness);
-    //println!("num_inputs: {:?}", r1cs.num_inputs);
-    //println!("num_aux: {:?}", r1cs.num_aux);
-    //println!("num_variables: {:?}", r1cs.num_variables);
-    //println!("num constraints: {:?}", r1cs.constraints.len());
+) -> Result<Vec<AllocatedNum<F>>, SynthesisError> {
+    // println!("witness: {:?}", witness);
+    println!("num_inputs: {:?}", r1cs.num_inputs);
+    println!("num_aux: {:?}", r1cs.num_aux);
+    println!("num_variables: {:?}", r1cs.num_variables);
+    println!("num constraints: {:?}", r1cs.constraints.len());
 
     let witness = &witness;
 
     let mut vars: Vec<AllocatedNum<F>> = vec![];
+    let mut output: Vec<AllocatedNum<F>> = vec![];
 
     for i in 1..r1cs.num_inputs {
+        println!("public_{:?}: {:?}", i, witness.clone().unwrap()[i]);
         let f: F = {
             match witness {
                 None => F::ONE,
@@ -100,6 +102,7 @@ pub fn synthesize<F: PrimeField, CS: ConstraintSystem<F>>(
         };
         let v = AllocatedNum::alloc(cs.namespace(|| format!("public_{}", i)), || Ok(f))?;
 
+        output.push(v.clone());
         vars.push(v);
     }
 
@@ -115,8 +118,6 @@ pub fn synthesize<F: PrimeField, CS: ConstraintSystem<F>>(
         let v = AllocatedNum::alloc(cs.namespace(|| format!("aux_{}", i)), || Ok(f))?;
         vars.push(v);
     }
-
-    let output = vars[0].clone();
 
     let make_lc = |lc_data: Vec<(usize, F)>| {
         let res = lc_data.iter().fold(
